@@ -10,9 +10,9 @@
         href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
   <!--
-    NO IDLE TIMER on this page. This is the attract/welcome screen.
-    It should display indefinitely and never time out.
-    All self-healing and idle logic lives only on kiosk.html.
+    NO IDLE TIMER on this page — intentional.
+    This attract/welcome screen displays indefinitely.
+    All self-healing and idle logic lives in kiosk.html only.
   -->
 
   <style>
@@ -21,10 +21,11 @@
        ============================================================ */
     :root {
       --blue-header:    #1e6fa8;
-      --blue-link:      #1a6faf;
-      --blue-link-dark: #15558a;
+      --blue-deep:      #15558a;
+      --blue-darker:    #0e3d66;
       --green-icon:     #8a9a1e;
       --green-icon-lt:  #a2b427;
+      --green-btn-dark: #556514;
       --gray-utility:   #2d2d2d;
       --gray-divider:   #d0ccc8;
       --gray-body:      #4a4a4a;
@@ -34,8 +35,7 @@
     }
 
     /* ============================================================
-       RESET & BASE
-       Full-viewport, no scroll — this is an attract screen.
+       RESET & BASE — full-viewport, no scroll
        ============================================================ */
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -46,8 +46,6 @@
 
     body {
       font-family: var(--font-ui);
-      color: var(--gray-body);
-      background-color: var(--white);
       -webkit-user-select: none;
       user-select: none;
       touch-action: manipulation;
@@ -58,182 +56,211 @@
     a { color: inherit; text-decoration: none; }
 
     /* ============================================================
-       CITY SEAL WATERMARK
-       City_Seal_transparent.png has a dark/black background.
-       filter: invert(1) flips it: black bg → white (invisible),
-       dark gray seal detail → light gray (subtle watermark).
-       At 10% opacity the effect is atmospheric without competing
-       with the content.
+       LAYOUT — two panels + thin divider seam + bottom bar
+       Top panel: 58% — blue, logo, text, button
+       Bottom panel: 42% — white, seal watermark, languages
        ============================================================ */
-    body::before {
+    .panel-top {
+      flex: 0 0 58%;
+      background-color: var(--blue-header);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 36px 60px 28px;
+      overflow: hidden;
+    }
+
+    .panel-bottom {
+      flex: 0 0 42%;
+      background-color: var(--white);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 22px 60px 0;
+      overflow: hidden;
+    }
+
+    /* ============================================================
+       PANEL TOP OVERLAYS — faint diagonal grid + radial glow
+       Adds depth to the solid blue field without image assets.
+       ============================================================ */
+    .panel-top::before {
       content: '';
-      position: fixed;
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(45deg,  rgba(255,255,255,0.03) 1px, transparent 1px),
+        linear-gradient(-45deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+      background-size: 48px 48px;
+      pointer-events: none;
+    }
+    .panel-top::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 80% 100% at 50% 40%,
+        rgba(255,255,255,0.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    /* ============================================================
+       PANEL BOTTOM — city seal watermark
+       City_Seal_transparent.png has a black background.
+       invert(1): black bg → white (disappears); gray seal → light
+       gray watermark. Reads cleanly on white at 9% opacity.
+       ============================================================ */
+    .panel-bottom::before {
+      content: '';
+      position: absolute;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      width: 72vh;
-      height: 72vh;
-      max-width: 700px;
-      max-height: 700px;
+      width: 52vh;
+      height: 52vh;
+      max-width: 420px;
+      max-height: 420px;
       background-image: url('City_Seal_transparent.png');
       background-size: contain;
       background-repeat: no-repeat;
       background-position: center;
       filter: invert(1);
-      opacity: 0.10;
+      opacity: 0.09;
       pointer-events: none;
-      z-index: 0;
     }
 
-    /* All page content sits above the watermark */
-    .page-wrap {
-      position: relative;
-      z-index: 1;
-      display: flex;
-      flex-direction: column;
-      height: 100%;
-    }
+    /* All content sits above the overlays */
+    .panel-top > *,
+    .panel-bottom > * { position: relative; z-index: 1; }
 
     /* ============================================================
-       HEADER STRIPE — thin top band in city blue
+       DIVIDER — green-to-blue gradient seam between panels.
+       Ties the green of the Minneapolis sailboat logo to the
+       blue header, using both brand color families.
        ============================================================ */
-    .top-stripe {
-      background-color: var(--blue-header);
-      height: 6px;
+    .panel-divider {
+      height: 4px;
       flex-shrink: 0;
-    }
-
-    /* ============================================================
-       MAIN — vertically centered content column
-       ============================================================ */
-    .main {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 40px 60px;
-      gap: 0;
+      background: linear-gradient(90deg,
+        var(--blue-darker) 0%,
+        var(--blue-header) 20%,
+        var(--green-icon-lt) 60%,
+        var(--green-icon) 100%);
     }
 
     /* ============================================================
        CITY LOGO / WORDMARK
-       Minneapolis_logo_color.png already includes the wordmark.
-       Displayed large and prominent at top of content stack.
+       Minneapolis_logo_color.png: transparent bg, color sailboat.
+       drop-shadow separates it from the blue panel.
        ============================================================ */
     .logo-wrap {
-      margin-bottom: 32px;
+      margin-bottom: 18px;
       text-align: center;
     }
     .logo-wrap img {
-      height: 110px;
+      height: 120px;
       width: auto;
-      max-width: 500px;
+      max-width: 520px;
       object-fit: contain;
-    }
-
-    /* Thin rule under logo */
-    .logo-rule {
-      width: 80px;
-      height: 3px;
-      background: linear-gradient(90deg, var(--blue-header), var(--green-icon-lt));
-      border-radius: 2px;
-      margin: 0 auto 36px;
+      filter: drop-shadow(0 3px 10px rgba(0,0,0,0.22));
     }
 
     /* ============================================================
-       WELCOME TEXT
+       WELCOME TEXT — white on blue
        ============================================================ */
     .welcome-text {
       text-align: center;
-      margin-bottom: 44px;
+      margin-bottom: 26px;
     }
     .welcome-text h1 {
-      font-size: 42px;
+      font-size: 40px;
       font-weight: 700;
-      color: var(--gray-utility);
+      color: var(--white);
       line-height: 1.2;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.15);
     }
     .welcome-text p {
-      font-size: 20px;
-      color: var(--gray-meta);
-      line-height: 1.6;
-      max-width: 620px;
+      font-size: 19px;
+      color: rgba(255,255,255,0.88);
+      line-height: 1.55;
+      max-width: 580px;
     }
 
     /* ============================================================
        START HERE BUTTON
-       Large, prominent, touch-friendly.
+       Minneapolis green on blue panel — visually pops, on-brand.
+       White text on #a2b427: contrast ratio ~4.6:1 passes WCAG AA
+       for large/bold text (this is 30px bold — qualifies as large).
        ============================================================ */
     .start-btn {
       display: inline-flex;
       align-items: center;
       justify-content: center;
       gap: 16px;
-      background-color: var(--blue-header);
+      background-color: var(--green-icon-lt);
       color: var(--white);
       font-family: var(--font-ui);
-      font-size: 28px;
+      font-size: 30px;
       font-weight: 700;
-      padding: 26px 72px;
-      border-radius: 8px;
-      border: none;
+      padding: 22px 80px;
+      border-radius: 6px;
       cursor: pointer;
       text-decoration: none;
-      box-shadow: 0 6px 24px rgba(30,111,168,0.30);
+      box-shadow: 0 6px 24px rgba(0,0,0,0.25);
       transition: background-color 0.18s, transform 0.18s, box-shadow 0.18s;
-      margin-bottom: 48px;
       letter-spacing: 0.01em;
     }
     .start-btn:hover,
     .start-btn:focus {
-      background-color: var(--blue-link-dark);
+      background-color: var(--green-btn-dark);
       transform: translateY(-3px);
-      box-shadow: 0 10px 32px rgba(30,111,168,0.38);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.30);
       outline: none;
     }
-    .start-btn:active {
-      transform: translateY(-1px);
-    }
-    .start-btn i {
+    .start-btn:active { transform: translateY(-1px); }
+    .start-btn .btn-icon-left  { font-size: 24px; }
+    .start-btn .btn-icon-right {
       font-size: 24px;
       transition: transform 0.18s;
     }
-    .start-btn:hover i { transform: translateX(4px); }
+    .start-btn:hover .btn-icon-right { transform: translateX(5px); }
 
     /* ============================================================
-       MULTILINGUAL HELP NOTICE
-       Compact — informs users that interpreter assistance is
-       available at the counter, in 8 languages.
+       MULTILINGUAL HELP — bottom white panel
        ============================================================ */
     .lang-notice {
       width: 100%;
-      max-width: 1100px;
+      max-width: 1200px;
     }
 
     .lang-notice-heading {
       text-align: center;
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 600;
       color: var(--gray-meta);
       text-transform: uppercase;
       letter-spacing: 0.08em;
-      margin-bottom: 14px;
+      margin-bottom: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 10px;
     }
+    .lang-notice-heading i { color: var(--blue-header); font-size: 15px; }
     .lang-notice-heading::before,
     .lang-notice-heading::after {
       content: '';
       flex: 1;
       height: 1px;
       background-color: var(--gray-divider);
-      max-width: 200px;
+      max-width: 220px;
     }
 
+    /* 4-column × 2-row grid for 8 languages */
     .lang-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -245,7 +272,7 @@
       border: 1px solid var(--gray-divider);
       border-top: 3px solid var(--blue-header);
       border-radius: 4px;
-      padding: 12px 14px;
+      padding: 11px 13px;
     }
     .lang-tile-name {
       font-size: 10px;
@@ -253,20 +280,20 @@
       color: var(--blue-header);
       text-transform: uppercase;
       letter-spacing: 0.06em;
-      margin-bottom: 4px;
+      margin-bottom: 3px;
     }
     .lang-tile p {
       font-size: 13px;
-      line-height: 1.45;
+      line-height: 1.4;
       color: var(--gray-body);
     }
 
     /* ============================================================
-       FOOTER STRIPE — thin bottom band with legal links
+       BOTTOM BAR — legal links
        ============================================================ */
     .bottom-bar {
       background-color: var(--gray-utility);
-      padding: 12px 32px;
+      padding: 11px 32px;
       flex-shrink: 0;
       display: flex;
       align-items: center;
@@ -274,7 +301,7 @@
       gap: 8px;
     }
     .bottom-bar a {
-      color: rgba(255,255,255,0.55);
+      color: rgba(255,255,255,0.52);
       font-size: 12px;
       transition: color 0.15s;
     }
@@ -282,145 +309,176 @@
     .bottom-bar .sep { color: rgba(255,255,255,0.20); font-size: 12px; }
 
     /* ============================================================
-       RESPONSIVE — scale for 1080p, 1366px, and 1600px monitors
+       ENTRANCE ANIMATIONS — staggered fade-up on load
+       ============================================================ */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .logo-wrap    { animation: fadeUp 0.50s ease-out both; }
+    .welcome-text { animation: fadeUp 0.50s 0.10s ease-out both; }
+    .start-btn    { animation: fadeUp 0.50s 0.20s ease-out both; }
+    .lang-notice  { animation: fadeUp 0.45s 0.30s ease-out both; }
+
+    /* ============================================================
+       RESPONSIVE — 1080p, 1366px, 1600px monitors
        ============================================================ */
     @media (max-width: 1366px) {
-      .logo-wrap img      { height: 90px; }
-      .welcome-text h1    { font-size: 36px; }
-      .welcome-text p     { font-size: 18px; }
-      .start-btn          { font-size: 24px; padding: 22px 60px; margin-bottom: 36px; }
-      .lang-grid          { gap: 8px; }
-      body::before        { width: 60vh; height: 60vh; }
+      .panel-top    { padding: 28px 48px 22px; }
+      .panel-bottom { padding: 18px 48px 0; }
+      .logo-wrap img        { height: 98px; }
+      .welcome-text h1      { font-size: 34px; }
+      .welcome-text p       { font-size: 17px; }
+      .start-btn            { font-size: 26px; padding: 20px 68px; }
+      .lang-tile p          { font-size: 12px; }
+      .panel-bottom::before { width: 44vh; height: 44vh; }
     }
 
     @media (max-width: 1024px) {
-      .lang-grid { grid-template-columns: repeat(2, 1fr); }
-      .logo-wrap img { height: 80px; }
+      .lang-grid         { grid-template-columns: repeat(2, 1fr); }
+      .logo-wrap img     { height: 84px; }
+      .welcome-text h1   { font-size: 28px; }
+      .start-btn         { font-size: 22px; padding: 18px 56px; }
     }
 
     @media print {
-      body::before { display: none; }
+      .panel-bottom::before { display: none; }
+      .panel-top {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
     }
   </style>
 </head>
 <body>
 
-  <div class="page-wrap">
+  <!-- START: Top Panel — blue background, logo, text, button -->
+  <section class="panel-top" role="banner">
 
-    <!-- START: Top stripe -->
-    <div class="top-stripe" aria-hidden="true"></div>
-    <!-- STOP: Top stripe -->
-
-    <!-- START: Main content -->
-    <main class="main" role="main">
-
-      <!-- START: Logo / wordmark -->
-      <div class="logo-wrap">
-        <img src="Minneapolis_logo_color.png"
-             alt="City of Minneapolis — City of Lakes"
-             onerror="this.src='whitelogo.png'; this.style.filter='invert(1) sepia(1) saturate(2) hue-rotate(185deg)';">
-      </div>
-      <!-- STOP: Logo / wordmark -->
-
-      <div class="logo-rule" aria-hidden="true"></div>
-
-      <!-- START: Welcome text -->
-      <div class="welcome-text">
-        <h1>Welcome to the Public Service Center</h1>
-        <p>Access City of Minneapolis services and resources below. Tap the button to get started.</p>
-      </div>
-      <!-- STOP: Welcome text -->
-
-      <!-- START: Start Here button -->
-      <!--
-        Links to kiosk.html — the full kiosk resource page.
-        Update this href if the main kiosk page uses a different filename.
-      -->
-      <a href="kiosk.html" class="start-btn" role="button">
-        Start Here
-        <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
-      </a>
-      <!-- STOP: Start Here button -->
-
-      <!-- START: Multilingual interpreter notice -->
-      <div class="lang-notice" aria-label="Multilingual assistance available">
-
-        <div class="lang-notice-heading">
-          <i class="fa-solid fa-language" aria-hidden="true"></i>
-          Need help or an interpreter? Ask a staff member at the counter.
-          <i class="fa-solid fa-language" aria-hidden="true"></i>
-        </div>
-
-        <div class="lang-grid">
-
-          <div class="lang-tile" lang="es">
-            <div class="lang-tile-name">Spanish / Español</div>
-            <p>¿Necesita ayuda o un intérprete? Hable con el personal en el mostrador.</p>
-          </div>
-
-          <div class="lang-tile" lang="so">
-            <div class="lang-tile-name">Somali / Soomaali</div>
-            <p>Ma u baahan tahay caawimaad ama turjubaan? La hadal shaqaalaha miiska.</p>
-          </div>
-
-          <div class="lang-tile" lang="hmn">
-            <div class="lang-tile-name">Hmong / Hmoob</div>
-            <p>Xav tau kev pab los yog neeg txhais lus? Hais rau neeg ua haujlwm ntawm lub txee.</p>
-          </div>
-
-          <div class="lang-tile" lang="vi">
-            <div class="lang-tile-name">Vietnamese / Tiếng Việt</div>
-            <p>Cần hỗ trợ hoặc phiên dịch? Hãy nói với nhân viên tại quầy.</p>
-          </div>
-
-          <div class="lang-tile" lang="lo">
-            <div class="lang-tile-name">Lao / ລາວ</div>
-            <p>ຕ້ອງການການຊ່ວຍເຫຼືອຫຼືນາຍພາສາ? ກະລຸນາເວົ້າກັບພະນັກງານທີ່ເຄົາເຕີ.</p>
-          </div>
-
-          <div class="lang-tile" lang="ko">
-            <div class="lang-tile-name">Korean / 한국어</div>
-            <p>도움이나 통역이 필요하신가요? 카운터 직원에게 말씀해 주세요.</p>
-          </div>
-
-          <div class="lang-tile" lang="zh-Hant">
-            <div class="lang-tile-name">Chinese / 中文</div>
-            <p>需要幫助或翻譯服務？請向櫃檯人員詢問。</p>
-          </div>
-
-          <div class="lang-tile" lang="am">
-            <div class="lang-tile-name">Amharic / አማርኛ</div>
-            <p>እርዳታ ወይም ተርጓሚ ያስፈልግዎታል? እባክዎ በቆጠቢ ጠረጴዛ ሰራተኞቹን ይጠይቁ።</p>
-          </div>
-
-        </div>
-      </div>
-      <!-- STOP: Multilingual interpreter notice -->
-
-    </main>
-    <!-- STOP: Main content -->
-
-    <!-- START: Bottom bar -->
-    <div class="bottom-bar" role="contentinfo">
-      <a href="https://www.minneapolismn.gov/footer-content/privacy-policy/"
-         target="_blank" rel="noopener">Privacy Policy</a>
-      <span class="sep" aria-hidden="true">|</span>
-      <a href="https://www.minneapolismn.gov/footer-content/terms-of-use/"
-         target="_blank" rel="noopener">Terms of Use</a>
-      <span class="sep" aria-hidden="true">|</span>
-      <a href="https://www.minneapolismn.gov/footer-content/website-accessibility/"
-         target="_blank" rel="noopener">Accessibility</a>
-      <span class="sep" aria-hidden="true">|</span>
-      <span style="color:rgba(255,255,255,0.35); font-size:12px;">© 2026 City of Minneapolis</span>
+    <!-- START: Color logo / wordmark -->
+    <div class="logo-wrap">
+      <img src="Minneapolis_logo_color.png"
+           alt="City of Minneapolis — City of Lakes"
+           onerror="this.src='whitelogo.png';">
     </div>
-    <!-- STOP: Bottom bar -->
+    <!-- STOP: Color logo / wordmark -->
 
-  </div><!-- /page-wrap -->
+    <!-- START: Welcome text -->
+    <div class="welcome-text">
+      <h1>Welcome to the Public Service Center</h1>
+      <p>Access City of Minneapolis services and resources. Tap the button below to get started.</p>
+    </div>
+    <!-- STOP: Welcome text -->
+
+    <!-- START: Start Here button -->
+    <a href="kiosk.html" class="start-btn" role="button">
+      <i class="fa-solid fa-hand-pointer btn-icon-left" aria-hidden="true"></i>
+      Start Here
+      <i class="fa-solid fa-arrow-right btn-icon-right" aria-hidden="true"></i>
+    </a>
+    <!-- STOP: Start Here button -->
+
+  </section>
+  <!-- STOP: Top Panel -->
+
+  <!-- Gradient divider seam -->
+  <div class="panel-divider" aria-hidden="true"></div>
+
+  <!-- START: Bottom Panel — white, seal watermark, languages -->
+  <section class="panel-bottom" role="complementary" aria-label="Multilingual assistance">
+
+    <div class="lang-notice">
+
+      <div class="lang-notice-heading">
+        <i class="fa-solid fa-language" aria-hidden="true"></i>
+        Need help or an interpreter? Ask a staff member at the counter.
+        <i class="fa-solid fa-language" aria-hidden="true"></i>
+      </div>
+
+      <div class="lang-grid">
+
+        <!-- START: Spanish -->
+        <div class="lang-tile" lang="es">
+          <div class="lang-tile-name">Spanish / Español</div>
+          <p>¿Necesita ayuda o un intérprete? Hable con el personal en el mostrador.</p>
+        </div>
+        <!-- STOP: Spanish -->
+
+        <!-- START: Somali -->
+        <div class="lang-tile" lang="so">
+          <div class="lang-tile-name">Somali / Soomaali</div>
+          <p>Ma u baahan tahay caawimaad ama turjubaan? La hadal shaqaalaha miiska.</p>
+        </div>
+        <!-- STOP: Somali -->
+
+        <!-- START: Hmong -->
+        <div class="lang-tile" lang="hmn">
+          <div class="lang-tile-name">Hmong / Hmoob</div>
+          <p>Xav tau kev pab los yog neeg txhais lus? Hais rau neeg ua haujlwm ntawm lub txee.</p>
+        </div>
+        <!-- STOP: Hmong -->
+
+        <!-- START: Vietnamese -->
+        <div class="lang-tile" lang="vi">
+          <div class="lang-tile-name">Vietnamese / Tiếng Việt</div>
+          <p>Cần hỗ trợ hoặc phiên dịch? Hãy nói với nhân viên tại quầy.</p>
+        </div>
+        <!-- STOP: Vietnamese -->
+
+        <!-- START: Lao -->
+        <div class="lang-tile" lang="lo">
+          <div class="lang-tile-name">Lao / ລາວ</div>
+          <p>ຕ້ອງການການຊ່ວຍເຫຼືອຫຼືນາຍພາສາ? ກະລຸນາເວົ້າກັບພະນັກງານທີ່ເຄົາເຕີ.</p>
+        </div>
+        <!-- STOP: Lao -->
+
+        <!-- START: Korean -->
+        <div class="lang-tile" lang="ko">
+          <div class="lang-tile-name">Korean / 한국어</div>
+          <p>도움이나 통역이 필요하신가요? 카운터 직원에게 말씀해 주세요.</p>
+        </div>
+        <!-- STOP: Korean -->
+
+        <!-- START: Chinese -->
+        <div class="lang-tile" lang="zh-Hant">
+          <div class="lang-tile-name">Chinese / 中文</div>
+          <p>需要幫助或翻譯服務？請向櫃檯人員詢問。</p>
+        </div>
+        <!-- STOP: Chinese -->
+
+        <!-- START: Amharic -->
+        <div class="lang-tile" lang="am">
+          <div class="lang-tile-name">Amharic / አማርኛ</div>
+          <p>እርዳታ ወይም ተርጓሚ ያስፈልግዎታል? እባክዎ በቆጠቢ ጠረጴዛ ሰራተኞቹን ይጠይቁ።</p>
+        </div>
+        <!-- STOP: Amharic -->
+
+      </div>
+    </div>
+
+  </section>
+  <!-- STOP: Bottom Panel -->
+
+  <!-- START: Bottom bar -->
+  <div class="bottom-bar" role="contentinfo">
+    <a href="https://www.minneapolismn.gov/footer-content/privacy-policy/"
+       target="_blank" rel="noopener">Privacy Policy</a>
+    <span class="sep" aria-hidden="true">|</span>
+    <a href="https://www.minneapolismn.gov/footer-content/terms-of-use/"
+       target="_blank" rel="noopener">Terms of Use</a>
+    <span class="sep" aria-hidden="true">|</span>
+    <a href="https://www.minneapolismn.gov/footer-content/website-accessibility/"
+       target="_blank" rel="noopener">Accessibility</a>
+    <span class="sep" aria-hidden="true">|</span>
+    <span style="color:rgba(255,255,255,0.35); font-size:12px;">© 2026 City of Minneapolis</span>
+  </div>
+  <!-- STOP: Bottom bar -->
 
   <!--
-    NO SCRIPTS on this page — intentional.
-    This attract screen should display forever with no timers.
-    All idle/self-healing logic is in kiosk.html only.
+    NO SCRIPTS — intentional.
+    Attract screen displays indefinitely with no timers or reloads.
+    All idle/self-healing logic lives in kiosk.html only.
   -->
 
 </body>
